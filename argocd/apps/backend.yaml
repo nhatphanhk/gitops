@@ -15,3 +15,14 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - CreateNamespace=true
+      - ServerSideApply=true
+  # Ignore the selector field on canary service — Argo Rollouts manages it at runtime
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: backend-canary
+      namespace: demo
+      jsonPointers:
+        - /spec/selector

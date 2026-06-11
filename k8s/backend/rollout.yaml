@@ -1,12 +1,12 @@
-apiVersion: apps/v1
-kind: Deployment
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
 metadata:
   name: backend
   namespace: demo
   annotations:
     argocd.argoproj.io/sync-wave: "1"
 spec:
-  replicas: 2
+  replicas: 4
   selector:
     matchLabels:
       app: backend
@@ -17,7 +17,6 @@ spec:
     spec:
       containers:
         - name: backend
-          # python:3.11-slim (~130MB) — pip install fastapi+uvicorn khi start
           image: python:3.11-slim
           workingDir: /app
           command: ["/bin/sh", "-c"]
@@ -26,7 +25,10 @@ spec:
           ports:
             - containerPort: 8000
           env:
-            # Kubernetes Downward API — inject pod/node info vào env vars
+            - name: VERSION
+              value: "v1"
+            - name: ERROR_RATE
+              value: "0"
             - name: POD_NAME
               valueFrom:
                 fieldRef:
@@ -39,12 +41,10 @@ spec:
               valueFrom:
                 fieldRef:
                   fieldPath: spec.nodeName
-          # Lấy MESSAGE từ web-config ConfigMap (đã có sẵn)
           envFrom:
             - configMapRef:
                 name: web-config
           volumeMounts:
-            # Mount main.py từ ConfigMap → /app/main.py (subPath để chỉ mount 1 file)
             - name: code
               mountPath: /app/main.py
               subPath: main.py
@@ -71,3 +71,24 @@ spec:
         - name: code
           configMap:
             name: backend-code
+  strategy:
+    canary:
+      # Stable Service — gets 100% traffic when stable
+      stableService: backend
+      # Canary Service — gets canary traffic during rollout
+      canaryService: backend-canary
+      steps:
+        - setWeight: 25
+        - pause:
+            duration: 1m
+        - setWeight: 50
+        - pause:
+            duration: 1m
+        - setWeight: 100
+      analysis:
+        templates:
+          - templateName: success-rate-analysis
+        startingStep: 1          # start analysis from step index 1 (after first setWeight)
+        args:
+          - name: namespace
+            value: demo
