@@ -54,6 +54,7 @@ async def inject_errors(request: Request, call_next):
 
 @app.get("/health", tags=["monitoring"])
 def health():
+    """Health check — trả về status và uptime của container"""
     uptime = int(time.time() - START_TIME)
     hours, rem = divmod(uptime, 3600)
     minutes, seconds = divmod(rem, 60)
@@ -86,6 +87,7 @@ def metrics():
 
 @app.get("/info", tags=["metadata"])
 def info():
+    """Metadata của app — đọc từ env vars (Kubernetes Downward API + ConfigMap)"""
     return {
         "app": "gitops-demo",
         "version": VERSION,
@@ -101,6 +103,7 @@ def info():
 
 @app.get("/message", tags=["config"])
 def message():
+    """Đọc MESSAGE từ web-config ConfigMap"""
     return {
         "message": os.getenv("MESSAGE", "hello from gitops"),
         "source": "kubernetes-configmap",

@@ -13,21 +13,3 @@ spec:
       port: 80
       targetPort: 8000
   type: ClusterIP
-
----
-# Canary service — Argo Rollouts manages its selector to point to canary pods only
-apiVersion: v1
-kind: Service
-metadata:
-  name: backend-canary
-  namespace: demo
-  annotations:
-    argocd.argoproj.io/sync-wave: "2"
-spec:
-  selector:
-    app: backend
-  ports:
-    - name: http
-      port: 80
-      targetPort: 8000
-  type: ClusterIP
