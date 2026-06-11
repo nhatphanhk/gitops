@@ -18,7 +18,7 @@ spec:
       containers:
         - name: backend
           # tiangolo/uvicorn-gunicorn-fastapi: tự động load /app/main.py, expose port 80
-          image: tiangolo/uvicorn-gunicorn-fastapi:python3.12-slim
+          image: tiangolo/uvicorn-gunicorn-fastapi:python3.11
           ports:
             - containerPort: 80
           env:
