@@ -1,0 +1,259 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: frontend-files
+  namespace: demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  index.html: |
+    <!DOCTYPE html>
+    <html lang="vi">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta name="description" content="GitOps Demo Dashboard — Real-time monitoring cho Kubernetes deployments">
+      <title>GitOps Dashboard</title>
+      <link rel="preconnect" href="https://fonts.googleapis.com">
+      <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+      <link rel="stylesheet" href="/style.css">
+    </head>
+    <body>
+      <div class="bg-orbs" aria-hidden="true">
+        <div class="orb orb-1"></div>
+        <div class="orb orb-2"></div>
+        <div class="orb orb-3"></div>
+      </div>
+      <header class="header" role="banner">
+        <div class="header-inner">
+          <div class="brand">
+            <div class="brand-icon" aria-hidden="true">
+              <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+                <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <div>
+              <h1 class="brand-name">GitOps Dashboard</h1>
+              <span class="brand-sub">nhatphanhk/gitops</span>
+            </div>
+          </div>
+          <div class="header-actions">
+            <div class="status-badge" id="global-status" role="status" aria-live="polite">
+              <span class="pulse-dot" id="pulse-dot"></span>
+              <span id="status-text">Connecting…</span>
+            </div>
+            <div class="refresh-info" id="refresh-countdown"></div>
+          </div>
+        </div>
+      </header>
+      <main class="main" id="main-content">
+        <section class="stats-row" aria-label="Tóm tắt trạng thái">
+          <div class="stat-card">
+            <div class="stat-icon health-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            </div>
+            <div class="stat-content"><div class="stat-label">API Status</div><div class="stat-value" id="api-status-val">—</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon uptime-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/><path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="stat-content"><div class="stat-label">Uptime</div><div class="stat-value" id="uptime-val">—</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon env-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/><path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="stat-content"><div class="stat-label">Environment</div><div class="stat-value" id="env-val">—</div></div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon deploy-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none"><circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+            </div>
+            <div class="stat-content"><div class="stat-label">Deployed By</div><div class="stat-value">ArgoCD</div></div>
+          </div>
+        </section>
+        <section class="cards-grid" aria-label="Chi tiết">
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-icon">💬</span>Live Message</div>
+              <span class="card-badge badge-yellow">ConfigMap</span>
+            </div>
+            <div class="card-body">
+              <blockquote class="message-display" id="message-display"><span class="skeleton"></span></blockquote>
+              <div class="message-meta"><span class="meta-label">Source:</span><code class="meta-code" id="message-source">—</code></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-icon">📦</span>App Metadata</div>
+              <span class="card-badge badge-indigo">REST API</span>
+            </div>
+            <div class="card-body">
+              <div class="info-list" id="info-list"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-icon">🔍</span>Health Check</div>
+              <span class="card-badge badge-green">Monitoring</span>
+            </div>
+            <div class="card-body">
+              <div class="health-status">
+                <div class="health-ring" id="health-ring">
+                  <svg class="ring-svg" viewBox="0 0 80 80">
+                    <circle class="ring-track" cx="40" cy="40" r="34"/>
+                    <circle class="ring-fill" id="ring-fill" cx="40" cy="40" r="34"/>
+                  </svg>
+                  <div class="ring-icon" id="ring-icon">
+                    <svg width="28" height="28" viewBox="0 0 24 24" fill="none"><path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></svg>
+                  </div>
+                </div>
+                <div class="health-details">
+                  <div class="health-status-label" id="health-label">Checking…</div>
+                  <div class="health-uptime-val" id="health-uptime">—</div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-icon">🚀</span>Deployment Info</div>
+              <span class="card-badge badge-blue">Kubernetes</span>
+            </div>
+            <div class="card-body">
+              <div class="info-list" id="pod-list"><div class="skeleton"></div><div class="skeleton"></div><div class="skeleton"></div></div>
+            </div>
+          </div>
+        </section>
+        <section class="arch-section">
+          <div class="card arch-card">
+            <div class="card-header">
+              <div class="card-title"><span class="card-icon">🏗️</span>GitOps Architecture</div>
+            </div>
+            <div class="card-body arch-body">
+              <div class="arch-flow">
+                <div class="arch-node git-node"><div class="arch-icon">📁</div><div class="arch-label">GitHub Repo</div><div class="arch-sub">nhatphanhk/gitops</div></div>
+                <div class="arch-connector"><div class="connector-line"></div><span class="connector-label">watches</span></div>
+                <div class="arch-node argo-node"><div class="arch-icon">🔄</div><div class="arch-label">ArgoCD</div><div class="arch-sub">App-of-Apps</div></div>
+                <div class="arch-connector"><div class="connector-line"></div><span class="connector-label">deploys</span></div>
+                <div class="arch-node k8s-node"><div class="arch-icon">⚙️</div><div class="arch-label">Kubernetes</div><div class="arch-sub">namespace: demo</div></div>
+                <div class="arch-connector"><div class="connector-line"></div><span class="connector-label">serves</span></div>
+                <div class="arch-node app-node"><div class="arch-icon">🌐</div><div class="arch-label">This App</div><div class="arch-sub">frontend + backend</div></div>
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
+      <footer class="footer" role="contentinfo">
+        <p>GitOps Demo &mdash; Powered by <strong>ArgoCD</strong> + <strong>Kubernetes</strong> + <strong>FastAPI</strong></p>
+      </footer>
+      <script src="/app.js"></script>
+    </body>
+    </html>
+
+  style.css: |
+    :root{--bg:#080c18;--surface:rgba(255,255,255,0.04);--surface-hover:rgba(255,255,255,0.07);--border:rgba(255,255,255,0.08);--border-hover:rgba(255,255,255,0.16);--text:#e2e8f0;--text-muted:#64748b;--accent:#00d4a1;--accent-dim:rgba(0,212,161,0.15);--indigo:#818cf8;--indigo-dim:rgba(129,140,248,0.15);--amber:#fbbf24;--amber-dim:rgba(251,191,36,0.15);--blue:#60a5fa;--blue-dim:rgba(96,165,250,0.15);--danger:#f87171;--danger-dim:rgba(248,113,113,0.15);--radius:16px;--radius-sm:10px;--shadow:0 8px 32px rgba(0,0,0,0.4);--transition:0.25s cubic-bezier(0.4,0,0.2,1)}
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    html{scroll-behavior:smooth}
+    body{font-family:'Inter',system-ui,sans-serif;background:var(--bg);color:var(--text);min-height:100vh;overflow-x:hidden;line-height:1.6}
+    .bg-orbs{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+    .orb{position:absolute;border-radius:50%;filter:blur(100px);opacity:.12;animation:drift 20s ease-in-out infinite alternate}
+    .orb-1{width:700px;height:700px;background:radial-gradient(circle,#6366f1,transparent 70%);top:-250px;left:-150px;animation-duration:28s}
+    .orb-2{width:600px;height:600px;background:radial-gradient(circle,#00d4a1,transparent 70%);bottom:-150px;right:-100px;animation-duration:22s;animation-delay:-8s}
+    .orb-3{width:500px;height:500px;background:radial-gradient(circle,#f59e0b,transparent 70%);top:45%;left:45%;animation-duration:35s;animation-delay:-15s}
+    @keyframes drift{from{transform:translate(0,0) scale(1)}to{transform:translate(50px,40px) scale(1.08)}}
+    .header,.main,.footer{position:relative;z-index:1}
+    .header{background:rgba(8,12,24,.75);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+    .header-inner{max-width:1200px;margin:0 auto;padding:0 24px;height:66px;display:flex;align-items:center;justify-content:space-between}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand-icon{width:42px;height:42px;background:linear-gradient(135deg,#6366f1,#00d4a1);border-radius:11px;display:flex;align-items:center;justify-content:center;color:#fff;box-shadow:0 4px 16px rgba(99,102,241,.4);flex-shrink:0}
+    .brand-name{font-size:18px;font-weight:700;letter-spacing:-.4px;line-height:1.2}
+    .brand-sub{display:block;font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;margin-top:2px}
+    .header-actions{display:flex;align-items:center;gap:14px}
+    .status-badge{display:flex;align-items:center;gap:8px;padding:6px 14px;background:var(--surface);border:1px solid var(--border);border-radius:50px;font-size:13px;transition:var(--transition)}
+    .pulse-dot{width:8px;height:8px;border-radius:50%;background:var(--accent);flex-shrink:0;animation:blink 2s ease-in-out infinite}
+    .pulse-dot.error{background:var(--danger)}
+    @keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+    .refresh-info{font-size:12px;color:var(--text-muted);font-family:'JetBrains Mono',monospace;min-width:90px;text-align:right}
+    .main{max-width:1200px;margin:0 auto;padding:32px 24px 40px}
+    .stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:16px;margin-bottom:24px}
+    .stat-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:20px;display:flex;align-items:center;gap:16px;backdrop-filter:blur(12px);transition:var(--transition);cursor:default}
+    .stat-card:hover{background:var(--surface-hover);border-color:var(--border-hover);transform:translateY(-3px);box-shadow:var(--shadow)}
+    .stat-icon{width:46px;height:46px;border-radius:12px;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+    .health-icon{background:var(--accent-dim);color:var(--accent)}
+    .uptime-icon{background:var(--indigo-dim);color:var(--indigo)}
+    .env-icon{background:var(--amber-dim);color:var(--amber)}
+    .deploy-icon{background:var(--danger-dim);color:var(--danger)}
+    .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.7px;color:var(--text-muted);margin-bottom:5px}
+    .stat-value{font-size:17px;font-weight:600;font-family:'JetBrains Mono',monospace;line-height:1}
+    .cards-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:20px;margin-bottom:24px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);backdrop-filter:blur(12px);transition:var(--transition);overflow:hidden}
+    .card:hover{border-color:var(--border-hover);box-shadow:var(--shadow)}
+    .card-header{display:flex;align-items:center;justify-content:space-between;padding:20px 24px 0}
+    .card-title{display:flex;align-items:center;gap:8px;font-size:15px;font-weight:600}
+    .card-icon{font-size:17px}
+    .card-badge{padding:3px 10px;border-radius:50px;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.6px;border:1px solid transparent}
+    .badge-yellow{background:var(--amber-dim);color:var(--amber);border-color:rgba(251,191,36,.25)}
+    .badge-indigo{background:var(--indigo-dim);color:var(--indigo);border-color:rgba(129,140,248,.25)}
+    .badge-green{background:var(--accent-dim);color:var(--accent);border-color:rgba(0,212,161,.25)}
+    .badge-blue{background:var(--blue-dim);color:var(--blue);border-color:rgba(96,165,250,.25)}
+    .card-body{padding:20px 24px 24px}
+    .message-display{font-size:22px;font-weight:700;font-family:'JetBrains Mono',monospace;color:var(--accent);margin:18px 0 14px;padding:14px 18px;background:var(--accent-dim);border-left:3px solid var(--accent);border-radius:0 var(--radius-sm) var(--radius-sm) 0;word-break:break-all;line-height:1.4}
+    .message-meta{display:flex;align-items:center;gap:8px;font-size:13px}
+    .meta-label{color:var(--text-muted)}
+    .meta-code{background:rgba(255,255,255,.05);color:var(--indigo);padding:2px 8px;border-radius:6px;font-family:'JetBrains Mono',monospace;font-size:12px}
+    .info-list{display:flex;flex-direction:column;gap:8px;margin-top:16px}
+    .info-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:var(--radius-sm);transition:var(--transition)}
+    .info-row:hover{background:rgba(255,255,255,.05)}
+    .info-key{font-size:13px;color:var(--text-muted)}
+    .info-val{font-size:13px;font-family:'JetBrains Mono',monospace;color:var(--text)}
+    .pod-val{color:var(--blue)}
+    .health-status{display:flex;align-items:center;gap:28px;padding:16px 0 4px}
+    .health-ring{position:relative;width:80px;height:80px;flex-shrink:0}
+    .ring-svg{width:80px;height:80px;transform:rotate(-90deg)}
+    .ring-track{fill:none;stroke:rgba(255,255,255,.06);stroke-width:6}
+    .ring-fill{fill:none;stroke:var(--accent);stroke-width:6;stroke-linecap:round;stroke-dasharray:213.6;stroke-dashoffset:0;transition:stroke .5s ease,stroke-dashoffset .8s ease;filter:drop-shadow(0 0 6px var(--accent))}
+    .ring-fill.error{stroke:var(--danger);filter:drop-shadow(0 0 6px var(--danger))}
+    .ring-icon{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:var(--accent);transition:color var(--transition)}
+    .ring-icon.error{color:var(--danger)}
+    .health-status-label{font-size:20px;font-weight:700;margin-bottom:6px;line-height:1.2}
+    .health-uptime-val{font-size:13px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+    .skeleton{display:block;height:22px;background:linear-gradient(90deg,rgba(255,255,255,.04) 25%,rgba(255,255,255,.09) 50%,rgba(255,255,255,.04) 75%);background-size:200% 100%;border-radius:8px;animation:shimmer 1.6s infinite;margin:6px 0}
+    .skeleton+.skeleton{width:80%}
+    .skeleton+.skeleton+.skeleton{width:60%}
+    @keyframes shimmer{from{background-position:200% 0}to{background-position:-200% 0}}
+    .arch-section{margin-bottom:8px}
+    .arch-body{padding-bottom:28px}
+    .arch-flow{display:flex;align-items:center;justify-content:space-between;padding-top:24px;overflow-x:auto;scrollbar-width:thin;scrollbar-color:var(--border) transparent}
+    .arch-node{display:flex;flex-direction:column;align-items:center;gap:8px;flex-shrink:0;padding:18px 20px;background:rgba(255,255,255,.025);border:1px solid var(--border);border-radius:var(--radius);min-width:130px;text-align:center;transition:var(--transition);cursor:default}
+    .arch-node:hover{transform:translateY(-6px);box-shadow:0 12px 40px rgba(0,0,0,.35)}
+    .arch-icon{font-size:30px;line-height:1}
+    .arch-label{font-size:13px;font-weight:600}
+    .arch-sub{font-size:11px;color:var(--text-muted);font-family:'JetBrains Mono',monospace}
+    .git-node{border-color:rgba(249,115,22,.3)}.git-node:hover{border-color:rgba(249,115,22,.6);background:rgba(249,115,22,.06)}
+    .argo-node{border-color:rgba(248,113,113,.3)}.argo-node:hover{border-color:rgba(248,113,113,.6);background:rgba(248,113,113,.06)}
+    .k8s-node{border-color:rgba(96,165,250,.3)}.k8s-node:hover{border-color:rgba(96,165,250,.6);background:rgba(96,165,250,.06)}
+    .app-node{border-color:rgba(0,212,161,.3)}.app-node:hover{border-color:rgba(0,212,161,.6);background:rgba(0,212,161,.06)}
+    .arch-connector{flex:1;display:flex;flex-direction:column;align-items:center;gap:6px;min-width:40px;padding:0 4px}
+    .connector-line{width:100%;height:2px;background:linear-gradient(90deg,var(--border),rgba(255,255,255,.2),var(--border));position:relative}
+    .connector-line::after{content:'';position:absolute;right:-1px;top:-4px;border:5px solid transparent;border-left-color:rgba(255,255,255,.25)}
+    .connector-label{font-size:10px;color:var(--text-muted);white-space:nowrap;text-transform:uppercase;letter-spacing:.5px}
+    .footer{text-align:center;padding:24px;font-size:13px;color:var(--text-muted);border-top:1px solid var(--border);position:relative;z-index:1}
+    .footer strong{color:var(--accent);font-weight:600}
+    @media(max-width:900px){.stats-row{grid-template-columns:repeat(2,1fr)}.cards-grid{grid-template-columns:1fr}}
+    @media(max-width:520px){.stats-row{grid-template-columns:1fr}.refresh-info{display:none}.main{padding:20px 16px 32px}.header-inner{padding:0 16px}}
+
+  app.js: |
+    const API='/api';const REFRESH_INTERVAL=30;
+    let countdown=REFRESH_INTERVAL;
+    function $(id){return document.getElementById(id)}
+    async function fetchJSON(path){const res=await fetch(`${API}${path}`,{headers:{'Accept':'application/json'},signal:AbortSignal.timeout(8000)});if(!res.ok)throw new Error(`HTTP ${res.status}`);return res.json()}
+    function setGlobalStatus(ok){const dot=$('pulse-dot'),text=$('status-text'),badge=$('global-status');if(ok){dot.className='pulse-dot';text.textContent='Connected';badge.style.borderColor='rgba(0,212,161,.35)'}else{dot.className='pulse-dot error';text.textContent='Disconnected';badge.style.borderColor='rgba(248,113,113,.35)'}}
+    function infoRow(k,v,cls=''){return`<div class="info-row"><span class="info-key">${k}</span><span class="info-val ${cls}">${v??'—'}</span></div>`}
+    async function loadHealth(){try{const d=await fetchJSON('/health');$('api-status-val').textContent=d.status==='ok'?'Healthy ✓':'Degraded';$('uptime-val').textContent=d.uptime_human??'—';const ok=d.status==='ok';$('health-label').textContent=ok?'All Systems Go':'Service Degraded';$('health-uptime').textContent=`Uptime: ${d.uptime_human??'—'}`;const fill=$('ring-fill'),icon=$('ring-icon');if(ok){fill.classList.remove('error');icon.classList.remove('error');fill.style.strokeDashoffset='0'}else{fill.classList.add('error');icon.classList.add('error');fill.style.strokeDashoffset='100'}setGlobalStatus(true)}catch(e){console.error('[health]',e);$('api-status-val').textContent='Error ✗';$('health-label').textContent='Unavailable';$('ring-fill').classList.add('error');$('ring-icon').classList.add('error');$('ring-fill').style.strokeDashoffset='100';setGlobalStatus(false)}}
+    async function loadInfo(){try{const d=await fetchJSON('/info');$('env-val').textContent=d.environment??'—';$('info-list').innerHTML=[['App',d.app],['Version',d.version],['Environment',d.environment],['Namespace',d.namespace],['Git Repo',d.git_repo],['Deployed By',d.deployed_by]].map(([k,v])=>infoRow(k,v)).join('');$('pod-list').innerHTML=[['Pod Name',d.pod_name],['Node Name',d.node_name],['Namespace',d.namespace]].map(([k,v])=>infoRow(k,v,'pod-val')).join('')}catch(e){console.error('[info]',e);const m='<div style="color:var(--danger);font-size:13px;padding-top:12px;">⚠ Failed to load</div>';$('info-list').innerHTML=m;$('pod-list').innerHTML=m}}
+    async function loadMessage(){try{const d=await fetchJSON('/message');$('message-display').textContent=`"${d.message}"`;$('message-source').textContent=d.source??'configmap'}catch(e){console.error('[message]',e);$('message-display').innerHTML='<span style="color:var(--danger)">⚠ Failed to load message</span>'}}
+    function tickCountdown(){const el=$('refresh-countdown');if(!el)return;countdown--;if(countdown<=0){countdown=REFRESH_INTERVAL;el.textContent='Refreshing…'}else{el.textContent=`Refresh in ${countdown}s`}}
+    async function refreshAll(){countdown=REFRESH_INTERVAL;$('refresh-countdown').textContent=`Refresh in ${REFRESH_INTERVAL}s`;await Promise.allSettled([loadHealth(),loadInfo(),loadMessage()])}
+    document.addEventListener('DOMContentLoaded',()=>{refreshAll();setInterval(tickCountdown,1000);setInterval(refreshAll,REFRESH_INTERVAL*1000)});

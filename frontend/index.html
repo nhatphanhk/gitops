@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="GitOps Demo Dashboard — Real-time monitoring cho Kubernetes deployments với ArgoCD">
+  <title>GitOps Dashboard</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/style.css">
+</head>
+<body>
+
+  <!-- Animated background orbs -->
+  <div class="bg-orbs" aria-hidden="true">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+    <div class="orb orb-3"></div>
+  </div>
+
+  <!-- Header -->
+  <header class="header" role="banner">
+    <div class="header-inner">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none">
+            <path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div>
+          <h1 class="brand-name">GitOps Dashboard</h1>
+          <span class="brand-sub">nhatphanhk/gitops</span>
+        </div>
+      </div>
+      <div class="header-actions">
+        <div class="status-badge" id="global-status" role="status" aria-live="polite">
+          <span class="pulse-dot" id="pulse-dot"></span>
+          <span id="status-text">Connecting…</span>
+        </div>
+        <div class="refresh-info" id="refresh-countdown" aria-label="Thời gian đến lần refresh tiếp theo"></div>
+      </div>
+    </div>
+  </header>
+
+  <!-- Main content -->
+  <main class="main" id="main-content">
+
+    <!-- Stat cards row -->
+    <section class="stats-row" aria-label="Tóm tắt trạng thái">
+      <div class="stat-card" id="stat-health">
+        <div class="stat-icon health-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <path d="M22 12h-4l-3 9L9 3l-3 9H2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">API Status</div>
+          <div class="stat-value" id="api-status-val">—</div>
+        </div>
+      </div>
+
+      <div class="stat-card" id="stat-uptime">
+        <div class="stat-icon uptime-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="10" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 6v6l4 2" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Uptime</div>
+          <div class="stat-value" id="uptime-val">—</div>
+        </div>
+      </div>
+
+      <div class="stat-card" id="stat-env">
+        <div class="stat-icon env-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <rect x="2" y="3" width="20" height="14" rx="2" stroke="currentColor" stroke-width="2"/>
+            <path d="M8 21h8M12 17v4" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Environment</div>
+          <div class="stat-value" id="env-val">—</div>
+        </div>
+      </div>
+
+      <div class="stat-card" id="stat-deploy">
+        <div class="stat-icon deploy-icon" aria-hidden="true">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+            <circle cx="12" cy="12" r="3" stroke="currentColor" stroke-width="2"/>
+            <path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"
+              stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+          </svg>
+        </div>
+        <div class="stat-content">
+          <div class="stat-label">Deployed By</div>
+          <div class="stat-value">ArgoCD</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Cards grid -->
+    <section class="cards-grid" aria-label="Chi tiết">
+
+      <!-- Live Message card -->
+      <div class="card message-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-icon" aria-hidden="true">💬</span>
+            Live Message
+          </div>
+          <span class="card-badge badge-yellow">ConfigMap</span>
+        </div>
+        <div class="card-body">
+          <blockquote class="message-display" id="message-display">
+            <span class="skeleton"></span>
+          </blockquote>
+          <div class="message-meta">
+            <span class="meta-label">Source:</span>
+            <code class="meta-code" id="message-source">—</code>
+          </div>
+        </div>
+      </div>
+
+      <!-- App Metadata card -->
+      <div class="card info-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-icon" aria-hidden="true">📦</span>
+            App Metadata
+          </div>
+          <span class="card-badge badge-indigo">REST API</span>
+        </div>
+        <div class="card-body">
+          <div class="info-list" id="info-list">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Health card -->
+      <div class="card health-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-icon" aria-hidden="true">🔍</span>
+            Health Check
+          </div>
+          <span class="card-badge badge-green">Monitoring</span>
+        </div>
+        <div class="card-body">
+          <div class="health-status">
+            <div class="health-ring" id="health-ring" aria-hidden="true">
+              <svg class="ring-svg" viewBox="0 0 80 80">
+                <circle class="ring-track" cx="40" cy="40" r="34"/>
+                <circle class="ring-fill" id="ring-fill" cx="40" cy="40" r="34"/>
+              </svg>
+              <div class="ring-icon" id="ring-icon">
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6L9 17l-5-5" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+                </svg>
+              </div>
+            </div>
+            <div class="health-details">
+              <div class="health-status-label" id="health-label">Checking…</div>
+              <div class="health-uptime-val" id="health-uptime">—</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Pod / Deployment card -->
+      <div class="card pod-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-icon" aria-hidden="true">🚀</span>
+            Deployment Info
+          </div>
+          <span class="card-badge badge-blue">Kubernetes</span>
+        </div>
+        <div class="card-body">
+          <div class="info-list" id="pod-list">
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+            <div class="skeleton"></div>
+          </div>
+        </div>
+      </div>
+
+    </section>
+
+    <!-- Architecture diagram -->
+    <section class="arch-section" aria-label="Kiến trúc GitOps">
+      <div class="card arch-card">
+        <div class="card-header">
+          <div class="card-title">
+            <span class="card-icon" aria-hidden="true">🏗️</span>
+            GitOps Architecture
+          </div>
+        </div>
+        <div class="card-body arch-body">
+          <div class="arch-flow" role="img" aria-label="GitOps pipeline: GitHub → ArgoCD → Kubernetes → App">
+            <div class="arch-node git-node">
+              <div class="arch-icon">📁</div>
+              <div class="arch-label">GitHub Repo</div>
+              <div class="arch-sub">nhatphanhk/gitops</div>
+            </div>
+            <div class="arch-connector">
+              <div class="connector-line"></div>
+              <span class="connector-label">watches</span>
+            </div>
+            <div class="arch-node argo-node">
+              <div class="arch-icon">🔄</div>
+              <div class="arch-label">ArgoCD</div>
+              <div class="arch-sub">App-of-Apps</div>
+            </div>
+            <div class="arch-connector">
+              <div class="connector-line"></div>
+              <span class="connector-label">deploys</span>
+            </div>
+            <div class="arch-node k8s-node">
+              <div class="arch-icon">⚙️</div>
+              <div class="arch-label">Kubernetes</div>
+              <div class="arch-sub">namespace: demo</div>
+            </div>
+            <div class="arch-connector">
+              <div class="connector-line"></div>
+              <span class="connector-label">serves</span>
+            </div>
+            <div class="arch-node app-node">
+              <div class="arch-icon">🌐</div>
+              <div class="arch-label">This App</div>
+              <div class="arch-sub">frontend + backend</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="footer" role="contentinfo">
+    <p>GitOps Demo &mdash; Powered by <strong>ArgoCD</strong> + <strong>Kubernetes</strong> + <strong>FastAPI</strong></p>
+  </footer>
+
+  <script src="/app.js"></script>
+</body>
+</html>

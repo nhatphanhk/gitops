@@ -1,0 +1,62 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: backend-code
+  namespace: demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "0"
+data:
+  main.py: |
+    import os
+    import time
+    from fastapi import FastAPI
+    from fastapi.middleware.cors import CORSMiddleware
+
+    app = FastAPI(
+        title="GitOps Demo API",
+        description="Backend API for GitOps Demo Dashboard",
+        version="1.0.0",
+    )
+
+    app.add_middleware(
+        CORSMiddleware,
+        allow_origins=["*"],
+        allow_methods=["GET"],
+        allow_headers=["*"],
+    )
+
+    START_TIME = time.time()
+
+
+    @app.get("/health", tags=["monitoring"])
+    def health():
+        uptime = int(time.time() - START_TIME)
+        hours, rem = divmod(uptime, 3600)
+        minutes, seconds = divmod(rem, 60)
+        return {
+            "status": "ok",
+            "uptime_seconds": uptime,
+            "uptime_human": f"{hours:02d}:{minutes:02d}:{seconds:02d}",
+        }
+
+
+    @app.get("/info", tags=["metadata"])
+    def info():
+        return {
+            "app": "gitops-demo",
+            "version": "1.0.0",
+            "environment": os.getenv("ENVIRONMENT", "production"),
+            "namespace": os.getenv("POD_NAMESPACE", "demo"),
+            "pod_name": os.getenv("POD_NAME", "unknown"),
+            "node_name": os.getenv("NODE_NAME", "unknown"),
+            "git_repo": "github.com/nhatphanhk/gitops",
+            "deployed_by": "ArgoCD",
+        }
+
+
+    @app.get("/message", tags=["config"])
+    def message():
+        return {
+            "message": os.getenv("MESSAGE", "hello from gitops"),
+            "source": "kubernetes-configmap",
+        }
