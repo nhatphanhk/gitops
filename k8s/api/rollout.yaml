@@ -1,0 +1,74 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Rollout
+metadata:
+  name: api
+  namespace: demo
+  annotations:
+    argocd.argoproj.io/sync-wave: "1"
+spec:
+  replicas: 4
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      containers:
+        - name: api
+          image: w9-api:1
+          imagePullPolicy: Never          # local Docker Desktop image
+          ports:
+            - containerPort: 8080
+          env:
+            - name: VERSION
+              value: "v1"
+            - name: ERROR_RATE
+              value: "0"
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: POD_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: 8080
+            initialDelaySeconds: 3
+            periodSeconds: 5
+          resources:
+            requests:
+              cpu: "50m"
+              memory: "64Mi"
+            limits:
+              cpu: "200m"
+              memory: "128Mi"
+  strategy:
+    canary:
+      stableService: api
+      canaryService: api-canary
+      steps:
+        - setWeight: 25
+        - pause:
+            duration: 1m
+        - setWeight: 50
+        - pause:
+            duration: 1m
+        - setWeight: 100
+      analysis:
+        templates:
+          - templateName: api-success-rate
+        startingStep: 1
+        args:
+          - name: namespace
+            value: demo
