@@ -13,15 +13,12 @@ spec:
     - name: success-rate
       interval: 30s
       failureLimit: 1
+      # Require ≥ 95% success rate (non-5xx / total)
       successCondition: result[0] >= 0.95
       provider:
         prometheus:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
           query: |
-            sum(rate(http_requests_total{status="success",namespace="{{args.namespace}}"}[1m]))
+            sum(rate(flask_http_request_duration_seconds_count{status!~"5..",namespace="{{args.namespace}}"}[1m]))
             /
-            (
-              sum(rate(http_requests_total{status="success",namespace="{{args.namespace}}"}[1m]))
-              +
-              sum(rate(http_requests_total{status="failure",namespace="{{args.namespace}}"}[1m]))
-            )
+            sum(rate(flask_http_request_duration_seconds_count{namespace="{{args.namespace}}"}[1m]))

@@ -3,6 +3,8 @@ kind: Service
 metadata:
   name: backend
   namespace: demo
+  labels:
+    app: backend
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
@@ -11,7 +13,7 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 8000
+      targetPort: 8080
   type: ClusterIP
 
 ---
@@ -21,6 +23,8 @@ kind: Service
 metadata:
   name: backend-canary
   namespace: demo
+  labels:
+    app: backend
   annotations:
     argocd.argoproj.io/sync-wave: "2"
 spec:
@@ -29,5 +33,5 @@ spec:
   ports:
     - name: http
       port: 80
-      targetPort: 8000
+      targetPort: 8080
   type: ClusterIP
