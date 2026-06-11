@@ -16,10 +16,36 @@ spec:
             serviceMonitorSelectorNilUsesHelmValues: false
             serviceMonitorNamespaceSelector: {}
             serviceMonitorSelector: {}
+            ruleNamespaceSelector: {}
+            ruleSelector: {}
         grafana:
           adminPassword: "admin"
         alertmanager:
-          enabled: false
+          enabled: true
+          config:
+            global:
+              # --- Thay bằng SMTP credentials thật ---
+              smtp_smarthost: "smtp.gmail.com:587"
+              smtp_from: "your-email@gmail.com"
+              smtp_auth_username: "your-email@gmail.com"
+              smtp_auth_password: "your-gmail-app-password"
+              smtp_require_tls: true
+            route:
+              group_by: ["alertname", "namespace"]
+              group_wait: 10s
+              group_interval: 5m
+              repeat_interval: 1h
+              receiver: "email-alert"
+              routes:
+                - matchers:
+                    - name: alertname
+                      value: ApiSuccessRateLow
+                  receiver: "email-alert"
+            receivers:
+              - name: "email-alert"
+                email_configs:
+                  - to: "your-email@gmail.com"
+                    send_resolved: true
   destination:
     server: https://kubernetes.default.svc
     namespace: monitoring

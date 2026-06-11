@@ -1,0 +1,29 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: api-slo
+  namespace: monitoring
+  labels:
+    # Label phải khớp với ruleSelector của Prometheus
+    release: kube-prometheus-stack
+spec:
+  groups:
+    - name: api.slo
+      rules:
+        - alert: ApiSuccessRateLow
+          # Tính success rate trong cửa sổ 1 phút
+          # Alert khi success rate < 95%
+          expr: |
+            (
+              sum(rate(flask_http_request_total{namespace="demo",status!~"5.."}[1m]))
+              /
+              sum(rate(flask_http_request_total{namespace="demo"}[1m]))
+            ) < 0.95
+          # Alert phải kéo dài 1 phút mới fire
+          for: 1m
+          labels:
+            severity: critical
+          annotations:
+            summary: "API SLO violated: success rate below 95%"
+            description: "API success rate is {{ $value | humanizePercentage }} in namespace demo (threshold: 95%)"
+            runbook_url: "https://github.com/nhatphanhk/gitops"
