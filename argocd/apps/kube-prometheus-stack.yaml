@@ -18,32 +18,28 @@ spec:
             serviceMonitorSelector: {}
             ruleNamespaceSelector: {}
             ruleSelector: {}
+
         grafana:
           adminPassword: "admin"
+
         alertmanager:
           enabled: true
-          alertmanagerSpec:
-            alertmanagerConfigSelector:
-              matchLabels: {}
-            alertmanagerConfigNamespaceSelector:
-              matchLabels: {}
           config:
             global:
+              resolve_timeout: 5m
               smtp_smarthost: "smtp.gmail.com:587"
               smtp_from: "Nhatphanhk102@gmail.com"
               smtp_auth_username: "Nhatphanhk102@gmail.com"
               smtp_auth_password: "zkqr lvss jzhu doal"
               smtp_require_tls: true
+
             route:
               group_by: ["alertname", "namespace"]
               group_wait: 10s
               group_interval: 5m
               repeat_interval: 1h
               receiver: "email-alert"
-              routes:
-                - matchers:
-                    - 'alertname="ApiSuccessRateLow"'
-                  receiver: "email-alert"
+
             receivers:
               - name: "email-alert"
                 email_configs:
@@ -58,3 +54,4 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
+      - ServerSideApply=true
