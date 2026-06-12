@@ -26,9 +26,9 @@ spec:
               containerPort: 8080
           env:
             - name: VERSION
-              value: "v2"
+              value: "v3"
             - name: ERROR_RATE
-              value: "0"
+              value: "0.6"
             - name: POD_NAME
               valueFrom:
                 fieldRef:
