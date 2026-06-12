@@ -17,7 +17,6 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
   ignoreDifferences:
     # Argo Rollouts tự quản lý selector của api-canary service
     - group: ""
@@ -26,9 +25,11 @@ spec:
       namespace: demo
       jsonPointers:
         - /spec/selector
-    # rollouts-controller thêm fields vào Rollout spec gây diff liên tục
+    # rollouts-controller thêm analysisRunMetadata và các fields vào Rollout
     - group: argoproj.io
       kind: Rollout
       namespace: demo
+      jqPathExpressions:
+        - .spec.strategy.canary.analysis.analysisRunMetadata
       managedFieldsManagers:
         - rollouts-controller
