@@ -15,3 +15,14 @@ spec:
     automated:
       prune: true
       selfHeal: true
+    syncOptions:
+      - ServerSideApply=true
+  # Bỏ qua selector drift của backend-canary service
+  # (Argo Rollouts tự quản lý selector này)
+  ignoreDifferences:
+    - group: ""
+      kind: Service
+      name: backend-canary
+      namespace: demo
+      jsonPointers:
+        - /spec/selector

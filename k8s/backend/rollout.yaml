@@ -71,7 +71,7 @@ spec:
         - setWeight: 100
       analysis:
         templates:
-          - templateName: success-rate-analysis
+          - templateName: backend-success-rate
         startingStep: 1
         args:
           - name: namespace

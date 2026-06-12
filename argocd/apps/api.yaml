@@ -19,9 +19,17 @@ spec:
       - CreateNamespace=true
       - ServerSideApply=true
   ignoreDifferences:
+    # Argo Rollouts tự quản lý selector của api-canary service
     - group: ""
       kind: Service
       name: api-canary
       namespace: demo
       jsonPointers:
         - /spec/selector
+    # Rollout status thường có diff do managed fields
+    - group: argoproj.io
+      kind: Rollout
+      name: api
+      namespace: demo
+      jsonPointers:
+        - /spec/template/metadata/annotations

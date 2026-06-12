@@ -1,24 +1,28 @@
 apiVersion: argoproj.io/v1alpha1
 kind: AnalysisTemplate
 metadata:
-  name: success-rate-analysis
+  # Đặt tên riêng cho backend để tránh xung đột với api app
+  name: backend-success-rate
   namespace: demo
   annotations:
     argocd.argoproj.io/sync-wave: "0"
 spec:
   args:
     - name: namespace
-      value: demo
   metrics:
     - name: success-rate
       interval: 30s
+      count: 3
       failureLimit: 1
       # Require ≥ 95% success rate (non-5xx / total)
+      # Dùng `or vector(1)` để tránh lỗi khi Prometheus trả về vector rỗng
       successCondition: result[0] >= 0.95
       provider:
         prometheus:
           address: http://kube-prometheus-stack-prometheus.monitoring.svc.cluster.local:9090
           query: |
-            sum(rate(flask_http_request_duration_seconds_count{status!~"5..",namespace="{{args.namespace}}"}[1m]))
-            /
-            sum(rate(flask_http_request_duration_seconds_count{namespace="{{args.namespace}}"}[1m]))
+            (
+              sum(rate(flask_http_request_duration_seconds_count{status!~"5..",namespace="{{args.namespace}}"}[2m]))
+              /
+              sum(rate(flask_http_request_duration_seconds_count{namespace="{{args.namespace}}"}[2m]))
+            ) or vector(1)
