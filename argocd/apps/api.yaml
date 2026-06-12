@@ -26,10 +26,9 @@ spec:
       namespace: demo
       jsonPointers:
         - /spec/selector
-    # Rollout status thường có diff do managed fields
+    # rollouts-controller thêm fields vào Rollout spec gây diff liên tục
     - group: argoproj.io
       kind: Rollout
-      name: api
       namespace: demo
-      jsonPointers:
-        - /spec/template/metadata/annotations
+      managedFieldsManagers:
+        - rollouts-controller

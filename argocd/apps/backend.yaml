@@ -17,12 +17,17 @@ spec:
       selfHeal: true
     syncOptions:
       - ServerSideApply=true
-  # Bỏ qua selector drift của backend-canary service
-  # (Argo Rollouts tự quản lý selector này)
   ignoreDifferences:
+    # Argo Rollouts tự quản lý selector của backend-canary service
     - group: ""
       kind: Service
       name: backend-canary
       namespace: demo
       jsonPointers:
         - /spec/selector
+    # rollouts-controller thêm fields vào Rollout spec gây diff liên tục
+    - group: argoproj.io
+      kind: Rollout
+      namespace: demo
+      managedFieldsManagers:
+        - rollouts-controller
