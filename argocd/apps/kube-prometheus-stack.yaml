@@ -42,8 +42,7 @@ spec:
               receiver: "email-alert"
               routes:
                 - matchers:
-                    - name: alertname
-                      value: ApiSuccessRateLow
+                    - 'alertname="ApiSuccessRateLow"'
                   receiver: "email-alert"
             receivers:
               - name: "email-alert"
