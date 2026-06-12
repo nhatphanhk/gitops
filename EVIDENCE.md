@@ -542,92 +542,6 @@ Stable version vẫn phục vụ traffic chính
 
 ---
 
-## 11. Evidence 8 — Rollback bằng Git revert dưới 5 phút
-
-### Mục tiêu chứng minh
-
-- Rollback không dùng `kubectl rollout undo`.
-- Rollback bằng cách sửa source of truth trong Git.
-- ArgoCD tự sync cụm về commit cũ.
-
-### Lệnh rollback
-
-```bash
-git log --oneline -5
-git revert HEAD --no-edit
-git push
-```
-
-### Theo dõi sau rollback
-
-```bash
-kubectl -n argocd get applications api
-kubectl argo rollouts get rollout api -n demo --watch
-kubectl -n demo get pods -l app=api
-```
-
-### Kết quả mong muốn
-
-```text
-ArgoCD api: Synced/Healthy
-Rollout api: Healthy
-VERSION quay về bản ổn định
-Thời gian rollback < 5 phút
-```
-
-### Ảnh cần chụp
-
-- Ảnh `git log --oneline` trước/sau revert.
-- Ảnh ArgoCD app `api` `Synced/Healthy` sau revert.
-- Ảnh Rollout trở lại `Healthy`.
-
-### Nhận xét
-
-Rollback bằng `git revert` là đúng GitOps vì thay đổi source of truth trước, sau đó ArgoCD đưa cụm về đúng trạng thái trong Git.
-
----
-
-## 12. Evidence 9 — CI validate manifest trên Pull Request
-
-### Mục tiêu chứng minh
-
-- Có workflow validate manifest.
-- CI chỉ validate, không deploy trực tiếp.
-- Deploy do ArgoCD thực hiện sau khi manifest vào Git.
-
-### File workflow
-
-```text
-github/workflows/validate.yml
-```
-
-### Nội dung chính
-
-```yaml
-name: validate
-on:
-  pull_request:
-    paths:
-      - "k8s/**"
-jobs:
-  validate:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - run: kubeconform -strict -summary k8s/
-```
-
-### Ảnh cần chụp
-
-- Ảnh GitHub Actions workflow `validate` chạy thành công.
-- Nếu có branch protection: ảnh PR yêu cầu status check trước khi merge.
-
-### Nhận xét
-
-CI đóng vai trò gác cổng chất lượng YAML. CD vẫn do ArgoCD đảm nhiệm theo GitOps pull model.
-
----
-
 ## 13. Checklist nộp bài
 
 | STT | Evidence | Trạng thái |
@@ -642,8 +556,6 @@ CI đóng vai trò gác cổng chất lượng YAML. CD vẫn do ArgoCD đảm n
 | 8 | Email cảnh báo được gửi về email cá nhân | ☐ |
 | 9 | Bản tốt canary lên 100% | ☐ |
 | 10 | Bản lỗi canary tự abort | ☐ |
-| 11 | Rollback bằng `git revert` dưới 5 phút | ☐ |
-| 12 | CI validate manifest trên PR | ☐ |
 
 ---
 
