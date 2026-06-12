@@ -23,7 +23,7 @@ spec:
           adminPassword: "admin"
 
         alertmanager:
-          enabled: true
+          enabled: false
           config:
             global:
               resolve_timeout: 5m
