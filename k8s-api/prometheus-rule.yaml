@@ -20,7 +20,7 @@ spec:
               sum(rate(flask_http_request_total{namespace="demo"}[1m]))
             ) < 0.95
           # Alert phải kéo dài 1 phút mới fire
-          for: 5m
+          for: 30s
           labels:
             severity: critical
           annotations:
