@@ -1,2 +1,0 @@
-# File này trống — namespace demo được quản lý bởi argocd/apps/web.yaml
-# qua k8s/namespace.yaml. Không khai báo lại ở đây để tránh SharedResourceWarning.

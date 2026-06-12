@@ -22,13 +22,17 @@ spec:
           adminPassword: "admin"
         alertmanager:
           enabled: true
+          alertmanagerSpec:
+            alertmanagerConfigSelector:
+              matchLabels: {}
+            alertmanagerConfigNamespaceSelector:
+              matchLabels: {}
           config:
             global:
-              # --- Thay bằng SMTP credentials thật ---
               smtp_smarthost: "smtp.gmail.com:587"
-              smtp_from: "your-email@gmail.com"
-              smtp_auth_username: "your-email@gmail.com"
-              smtp_auth_password: "your-gmail-app-password"
+              smtp_from: "Nhatphanhk102@gmail.com"
+              smtp_auth_username: "Nhatphanhk102@gmail.com"
+              smtp_auth_password: "zkqr lvss jzhu doal"
               smtp_require_tls: true
             route:
               group_by: ["alertname", "namespace"]
@@ -44,7 +48,7 @@ spec:
             receivers:
               - name: "email-alert"
                 email_configs:
-                  - to: "your-email@gmail.com"
+                  - to: "nhatph102.work@gmail.com"
                     send_resolved: true
   destination:
     server: https://kubernetes.default.svc
@@ -55,4 +59,3 @@ spec:
       selfHeal: true
     syncOptions:
       - CreateNamespace=true
-      - ServerSideApply=true
